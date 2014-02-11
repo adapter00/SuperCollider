@@ -76,7 +76,7 @@ x.free;
 ###########################################################
 #Tutorial 4 http://www.youtube.com/watch?v=-wDAPo9hpCg ####
 ###########################################################
- 
+
 {
     x= {
         var sig,freq, env;
@@ -92,6 +92,10 @@ x.play;
 x.free;
 s.freeAll;
 
+
+###########################################################
+#Tutorial 5 http://www.youtube.com/watch?v=fAXETAyrv8s ####
+###########################################################
 
 
 (
@@ -112,10 +116,93 @@ Env.new([0,1,0.2,0],[0.5,1,2],[3,-3,0]).plot;
     x = {
         arg gate=0;
         var sig,env,freq;
-        freq = EnvGen.kr(Env.adsr(1),gate,200,0.1); 
+        freq = EnvGen.kr(Env.adsr(1),gate,200,0.1);
         env = EnvGen.kr(Env.adsr,gate,doneAction:2);
         sig = Pulse.ar(SinOsc.kr(freq).range(50,100)) * env;
     }.scope;
 )
 x.set(\gate,0);
 x.free;
+
+
+###########################################################
+#Tutorial 6 http://www.youtube.com/watch?v=bMGXYEg1gJo ####
+###########################################################
+
+
+(
+x = Array.newClear(5);
+[6,4,0.5,10,7].do{
+	arg item,count;
+	x[count] = item.squared.postln;
+}
+);
+x;
+
+z = [6,4,0.5,10,5].collect(_.squared);
+5.do{arg item;item.postln};
+
+
+x ={VarSaw.ar(40!2,0,0.05)}.play;
+
+x.free;
+
+(
+SynthDef.new(\iter,{
+	arg freq = 40;
+	var temp,sum,env;
+	sum = 0;
+	env = EnvGen.kr(
+		Env.perc(0.01,5,1,-2),
+		doneAction:1
+	);
+	10.do{
+		temp = VarSaw.ar(
+			freq * {Rand(0.99,1.02)}!2,
+			{Rand(0.0,1.0)}!2,
+			{ExpRand(0.005,0.05)}!2
+		);
+		sum = sum + temp;
+	};
+	sum  = sum * 0.05 * env;
+	Out.ar(0,sum);
+}).add;
+)
+
+x =Synth.new(\iter,[\freq,60]);
+x =Synth.new(\iter,[\freq,73].midicps);
+x =Synth.new(\iter,[\freq,80].midicps);
+x =Synth.new(\iter,[\freq,75].midicsp);
+
+(
+[53,59,63,68].do{
+	arg midinote;
+	Synth.new(\iter,[\freq,midinote.midicps]);
+}
+)
+
+
+(
+SynthDef.new(\iter2,{
+	arg freq = 200,dev =1.02, num =10;
+	var temp,sum;
+	sum =0;
+	num.do{
+		arg count;
+		temp = SinOsc.ar(
+			freq *
+			(count + 1) *
+			LFNoise1.kr({Rand(0.05,0.2)}!2).range(dev.reciprocal,dev)
+		);
+		temp =temp * LFNoise1.kr({Rand(0.5,8)}!2).exprange(0.01,1);
+		sum = sum + temp;
+	};
+	sum = sum * 0.05;
+	Out.ar(0,sum);
+}).add;
+)
+x =  Synth.new(\iter2);
+x.set(\freq,50);
+x.set(\dev,5.4);
+x.free;
+

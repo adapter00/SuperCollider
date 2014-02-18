@@ -206,3 +206,84 @@ x.set(\freq,50);
 x.set(\dev,5.4);
 x.free;
 
+
+###########################################################
+#Tutorial 7 http://www.youtube.com/watch?v=VGs_lMw2hQg ####
+###########################################################
+
+s.plotTree;
+s.meter;
+
+(
+SynthDef.new(\blip, {
+	arg out,fund = 300, dens = 2, decay = 0.2;
+	var freq, trig, sig;
+	freq = LFNoise0.kr(3).exprange(fund,fund*4).round(fund);
+	sig = SinOsc.ar(freq) * 0.25;
+	trig = Dust.kr(dens);
+	sig = sig * EnvGen.kr(Env.perc(0.01,decay), trig);
+	sig = Pan2.ar(sig,LFNoise1.kr(10));
+	Out.ar(out,sig);
+}).add;
+
+
+SynthDef.new(\reverb, {
+	arg in, out = 0;
+	var sig;
+	sig = In.ar(in,2);
+	sig = FreeVerb .ar(sig,0.5,0.8,0.2);
+	Out.ar(out,sig);
+}).add;
+)
+
+s.options.numAudioBusChannels;
+s.options.numOutputBusChannels = 4;
+s.options.numInputBusChannels = 2;
+
+s.reboot;
+s.meter;
+
+
+8.do{
+	Synth.new(
+		\blip,
+		[
+			\out,~reverbBus2,
+			\fund,exprand(60,300).round(30)
+		],
+		~sourceGrp
+	);
+}
+
+
+
+
+
+~sourceGrp.set(\decay,1.2);
+~sourceGrp.set(\dens,0.25);
+
+~sourceGrp.freeAll;
+
+x = Synth.new(\blip,[\out,~reverbBus2],~sourceGrp);
+y = Synth.new(\reverb,[\in,~reverbBus2],~fxGrp);
+x.set(\out,20);
+y.set(\in,25);
+
+g = Group.new;
+
+x.free;
+y.free;
+s.freeAll;
+
+~reverbBus = Bus.audio(s,1);
+
+~reverbBus.index;
+
+~reverbBus2 = Bus.audio(s,2);
+~reverbBus2.index;
+
+x  = Synth.before(y,\blip,[\out,~reverbBus2]);
+
+
+~sourceGrp = Group.new;
+~fxGrp=Group.after(~sourceGrp);
